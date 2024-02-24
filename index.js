@@ -45,13 +45,15 @@ app.post("/createuser", function (req, res) {
 });
 let users = [
   {
-    userId:3, 
-    socketId:'232312312',
+    userId: 3,
+    socketId: "232312312",
     lat: 48,
     lng: -98.13,
   },
 ];
+const messages = {
 
+}
 const http = require("http");
 const server = http.createServer(app);
 
@@ -68,7 +70,7 @@ const io = require("socket.io")(server, {
 io.on("connection", (socket) => {
   socket.on("userLogin", (user) => {
     const { userId, lat, lng } = user;
-    // console.log(user)
+    console.log(user)
     users.push({
       userId,
       lat,
@@ -78,12 +80,24 @@ io.on("connection", (socket) => {
     // console.log(users)
     socket.emit("getUsers", users);
   });
-  socket.on("sendInv", (payload) => {
-    const { user, socketId, to } = payload;
+  socket.on("sendInv", async (payload) => {
+    const { user, socketId, to, roomId } = payload;
+    console.log("SendInv " + roomId)
+    await socket.join(roomId);
+    messages[roomId] =[]
     console.log(payload);
     io.to(to).emit("getInv", payload);
   });
-
+  socket.on("acpInv", (roomId) => {
+    socket.join(roomId);
+  });
+  socket.on("sendMsg", (message) => {
+    const {roomId} = message
+    console.log(roomId)
+    messages[roomId]?.push(message)
+    console.log(messages[roomId])
+    io.emit("getMsg", messages[roomId])
+  });
   socket.on("disconnect", () => {
     users = users.filter((u) => u.socketId != socket.id);
     // console.log(users)
