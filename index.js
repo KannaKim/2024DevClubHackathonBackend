@@ -15,7 +15,15 @@ app.get("/getuser", function (req,res){
   const query = 'select * from user where userid = ?'
   connection.query(query, [req.query.userid],(err, rows, fields) => {
     if (err) throw err
-    res.send({"userid":rows[0]})
+    res.json(rows[0])
+  })
+})
+app.post("/getuserbyemailandpw", function (req,res){
+  connection.connect()
+  const query = 'select * from user where email =? and pw=?'
+  connection.query(query, [req.body.email, req.body.pw],(err, rows, fields) => {
+    if (err) throw err
+    res.json(rows[0])
   })
 })
 app.post("/createuser", function (req,res){
