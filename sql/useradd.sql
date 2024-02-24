@@ -1,0 +1,1 @@
+insert into user(userid,pw) values('foo1234','notencryptedobviously')
