@@ -3,6 +3,16 @@ const app = express();
 const port = 3000;
 const { connection } = require("./sql_config");
 app.use(express.json());
+var cors = require('cors');
+app.use(cors());
+
+const http = require("http");
+const server = http.createServer(app);
+
+const CLIENT_APP = "http://localhost:5173";
+server.listen(port, () => {
+  console.log("Server is running on port ", +port);
+});
 app.get("/", function (req, res) {
   connection.connect();
   connection.query("select userid from user", (err, rows, fields) => {
@@ -21,6 +31,7 @@ app.get("/getuser", function (req,res){
 app.post("/getuserbyemailandpw", function (req,res){
   connection.connect()
   const query = 'select * from user where email =? and pw=?'
+  
   connection.query(query, [req.body.email, req.body.pw],(err, rows, fields) => {
     if (err) throw err
     res.json(rows[0])
@@ -31,7 +42,7 @@ app.post("/createuser", function (req,res){
   connection.connect();
   const query =
     "insert into user(userid,pw,email,age,major,firstname,lastname,latitude,longitude) values(?,?,?,?,?,?,?,?,?)";
-  console.log(req.body.userid);
+
   connection.query(
     query,
     [
@@ -52,23 +63,11 @@ app.post("/createuser", function (req,res){
   );
 });
 let users = [
-  {
-    userId: 3,
-    socketId: "232312312",
-    lat: 48,
-    lng: -98.13,
-  },
+ 
 ];
 const messages = {
 
 }
-const http = require("http");
-const server = http.createServer(app);
-
-const CLIENT_APP = "http://localhost:5173";
-server.listen(port, () => {
-  console.log("Server is running on port ", +port);
-});
 const io = require("socket.io")(server, {
   cors: {
     origin: CLIENT_APP,
@@ -77,23 +76,23 @@ const io = require("socket.io")(server, {
 });
 io.on("connection", (socket) => {
   socket.on("userLogin", (user) => {
-    const { userId, lat, lng } = user;
-    console.log(user)
+    const { userId, latitude, longtitude } = user;
+  
     users.push({
       userId,
-      lat,
-      lng,
+      latitude,
+      longtitude,
       socketId: socket.id,
     });
-    // console.log(users)
+    console.log(users)
     socket.emit("getUsers", users);
   });
   socket.on("sendInv", async (payload) => {
     const { user, socketId, to, roomId } = payload;
-    console.log("SendInv " + roomId)
+    // console.log("SendInv " + roomId)
     await socket.join(roomId);
     messages[roomId] =[]
-    console.log(payload);
+    // console.log(payload);
     io.to(to).emit("getInv", payload);
   });
   socket.on("acpInv", (roomId) => {
@@ -101,7 +100,7 @@ io.on("connection", (socket) => {
   });
   socket.on("sendMsg", (message) => {
     const {roomId} = message
-    console.log(roomId)
+    // console.log(roomId)
     messages[roomId]?.push(message)
     console.log(messages[roomId])
     io.emit("getMsg", messages[roomId])
