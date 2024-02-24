@@ -1,0 +1,1 @@
+add lon,lat to the user info
