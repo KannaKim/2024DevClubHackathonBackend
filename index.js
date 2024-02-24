@@ -18,6 +18,14 @@ app.get("/getuser", function (req,res){
     res.send({"userid":rows[0]})
   })
 })
+app.post("/getuserbyemailandpw", function (req,res){
+  connection.connect()
+  const query = 'select * from user where pw=? and email=?'
+  connection.query(query, [req.body.pw,req.body.email],(err, rows, fields) => {
+    if (err) throw err
+    res.send({"userid":rows[0]})
+  })
+})
 app.post("/createuser", function (req,res){
   // res.json({requestBody: req.body})
   connection.connect()
